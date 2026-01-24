@@ -1,0 +1,4 @@
+/target
+/build
+/docker/config-gen
+.env

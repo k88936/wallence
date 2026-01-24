@@ -1,0 +1,17 @@
+[package]
+name = "config-gen"
+version = "0.1.0"
+edition = "2021"
+description = "Generate mihomo configs from subscriptions or profile files"
+
+[dependencies]
+anyhow = "1"
+boa_engine = "0.22"
+clap = { version = "4", features = ["derive"] }
+serde_json = { version = "1", features = ["preserve_order"] }
+serde_yaml = "0.9"
+ureq = "2"
+
+[profile.release]
+lto = "thin"
+strip = true
