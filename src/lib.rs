@@ -156,6 +156,14 @@ pub fn apply_rule_sources(config: &mut Value, sources: &[Value]) -> Result<()> {
                     group_object.remove("proxies");
                 }
                 if uses_provider {
+                    if group_object.get("type").and_then(Value::as_str) == Some("select") {
+                        group_object
+                            .insert("type".to_owned(), Value::String("url-test".to_owned()));
+                        group_object
+                            .entry("url")
+                            .or_insert_with(|| Value::String(HEALTH_CHECK_URL.to_owned()));
+                        group_object.entry("interval").or_insert_with(|| json!(300));
+                    }
                     let use_value = group_object
                         .entry("use")
                         .or_insert_with(|| Value::Array(Vec::new()));
@@ -395,11 +403,15 @@ mod tests {
         let gfw = groups.iter().find(|group| group["name"] == "GFW").unwrap();
         assert!(gfw.get("proxies").is_none());
         assert_eq!(gfw["use"], json!(["provider1", "provider2"]));
+        assert_eq!(gfw["type"], "url-test");
+        assert_eq!(gfw["url"], HEALTH_CHECK_URL);
+        assert_eq!(gfw["interval"], 300);
 
         let accel = groups
             .iter()
             .find(|group| group["name"] == "Accel")
             .unwrap();
+        assert_eq!(accel["type"], "select");
         assert_eq!(accel["proxies"], json!(["DIRECT", "GFW"]));
         assert!(accel.get("use").is_none());
         assert_eq!(config["rule-providers"]["ads"]["path"], "./ads.yaml");
