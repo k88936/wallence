@@ -4,8 +4,8 @@ use anyhow::{bail, Context as _, Result};
 use clap::Parser;
 
 use config_gen::{
-    apply_extend, generate_from_subscriptions, load_config, prepend_direct_domains,
-    write_config, DEFAULT_DIST, DEFAULT_OUTPUT,
+    apply_extend, apply_rule_sources, generate_from_subscriptions, load_config,
+    prepend_direct_domains, write_config, DEFAULT_DIST, DEFAULT_OUTPUT,
 };
 
 /// Generate a mihomo config from subscription URLs or a profile file.
@@ -51,7 +51,16 @@ fn main() -> Result<()> {
             }
             load_config(&path)?
         }
-        None if !subscriptions.is_empty() => generate_from_subscriptions(&subscriptions),
+        None if !subscriptions.is_empty() => {
+            let mut config = generate_from_subscriptions(&subscriptions);
+            let sources = subscriptions
+                .iter()
+                .map(|subscription| config_gen::fetch_config(subscription))
+                .collect::<Result<Vec<_>>>()?;
+            apply_rule_sources(&mut config, &sources)
+                .context("failed to merge subscription rules")?;
+            config
+        }
         None => bail!("either --subscriptions or --profile is required"),
     };
 
