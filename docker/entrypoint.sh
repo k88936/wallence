@@ -1,10 +1,5 @@
 #!/bin/sh
-
-# Validate required environment variables
-if [ -z "$SUBSCRIPTIONS" ] || [ -z "$DIRECT_DOMAINS" ]; then
-    echo "Error: env SUBSCRIPTIONS and DIRECT_DOMAINS must be set" >&2
-    exit 1
-fi
+set -eu
 
 /config-gen \
   --subscriptions="$SUBSCRIPTIONS" \
